@@ -1,7 +1,9 @@
 <?php
-require_once __DIR__ . '/vendor/autoload.php';
+require_once 'vendor/autoload.php';
 
-use femtimo\Kernel;
+use femtimo\engine\Kernel;
+
+print_r(get_declared_classes);
 
 $k = new Kernel();
 
