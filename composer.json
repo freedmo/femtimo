@@ -1,0 +1,27 @@
+{
+    "name": "freedmo/femtimo",
+    "description": "A web application core based on symfony. For building an MVC website, with plugins in the future.",
+    "type": "project",
+    "require": {
+        "symfony/http-foundation": "^3.1",
+        "symfony/http-kernel": "^3.1",
+        "symfony/dependency-injection": "^3.1",
+        "php": ">=5.3.0"
+    },
+    "require-dev": {
+        "symfony/var-dumper": "^3.1"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Eduard Gruenwald",
+            "email": "freedmo@freedmo.de"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-0": {
+            "femtimo\\engine\\":"engine/"
+        }
+    }
+}
