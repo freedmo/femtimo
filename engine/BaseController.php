@@ -76,11 +76,9 @@ class BaseController
     protected function redirect($controller, $action, $status = 302)
     {
         if (strcmp($this->controller, $controller) !== 0) {
-            if ($this->action != $action) {
                 $response = new RedirectResponse("$controller" . DIRECTORY_SEPARATOR . "$action");
                 $response->setStatusCode($status);
                 $this->redirect = $response;
-            }
         }
         else{
             if(strcmp($this->action, $action) !== 0){
@@ -101,7 +99,6 @@ class BaseController
     {
 
         if (strcmp($this->controller, $controller) !== 0) {
-            if ($this->action != $action) {
                 if ($this->action != $action) {
                     if (isset($params)) {
                         $this->request->attributes->add($params);
@@ -119,7 +116,6 @@ class BaseController
                         ]));
                     return ((new Kernel())->handle($subRequest, HttpKernel::SUB_REQUEST));
                 }
-            }
         }
         else{
             if(strcmp($this->action, $action) !== 0){
