@@ -15,10 +15,10 @@ class Kernel implements HttpKernelInterface
 
     private $configuration;
 
-
     public function __construct(
         $themeFolder,
         $namespace,
+        $namespaceComponent,
         $defaultController = 'Index',
         $defaultAction = 'index',
         $componentFolder = null
@@ -27,12 +27,14 @@ class Kernel implements HttpKernelInterface
         $this->configuration['theme'] = $themeFolder;
         $this->configuration['component'] = $componentFolder;
         $this->configuration['namespace'] = $namespace;
+        $this->configuration['namespaceComponent'] = $namespaceComponent;
         $this->configuration['controller'] = $defaultController;
         $this->configuration['action'] = $defaultAction;
         if (empty($this->configuration['namespace']) || empty($this->configuration['theme'])){
             throw new \Exception("Missing construct param.");
         }
     }
+
 
     public function handle(
         \Symfony\Component\HttpFoundation\Request $request,
@@ -75,12 +77,16 @@ class Kernel implements HttpKernelInterface
                             (call_user_func_array([$controller, $actionName], $paramCall));
                         }
 
+                        /*
+                         * For a plugin which is still in development
+                         * */
                         if ($redirect = $controller->isRedirect()) {
                             return $redirect;
                         } elseif ($redirect = $controller->isJson()) {
                             return new JsonResponse($controller->getJson());
                         } else {
-                            return new Response($this->configuration['theme'] . str_replace("Controller", "", $controller) . DIRECTORY_SEPARATOR . str_replace("Action", "", $actionName) . ".php");
+                            if (class_exists('Smarty'))
+                                return new Response($this->container->get('view')->display($this->configuration['theme'] . DIRECTORY_SEPARATOR . str_replace("Controller", "", str_replace("\\", "/", (new \ReflectionClass($controller))->getShortName())) . DIRECTORY_SEPARATOR . str_replace("Action", "", $actionName) . ".tpl"));
                         }
                     } else {
                         return new RedirectResponse(DIRECTORY_SEPARATOR . $this->configuration['controller']);
@@ -94,8 +100,11 @@ class Kernel implements HttpKernelInterface
     private function initializeContainer()
     {
         $this->container = new ContainerBuilder();
-        $files = array_diff(scandir('engine' . DIRECTORY_SEPARATOR . 'component'), array('.', '..'));
 
+        /*
+         * Some path problem here
+         * */
+        $files = array_diff(scandir('engine' . DIRECTORY_SEPARATOR . 'component'), array('.', '..'));
         foreach ($files as $file) {
             if ($item = pathinfo("engine" . DIRECTORY_SEPARATOR . "component" . DIRECTORY_SEPARATOR . "$file")) {
                 if ($item["extension"] === "php") {
@@ -105,11 +114,10 @@ class Kernel implements HttpKernelInterface
         }
 
         $files = array_diff(scandir($this->configuration['component']), array('.', '..'));
-
         foreach ($files as $file) {
             if ($item = pathinfo($this->configuration['component'] . DIRECTORY_SEPARATOR . "$file")) {
-                if ($item["extension"] === "php") {
-                    $this->container->register($item["filename"], $this->configuration['namespace'] . $item["filename"]);
+                if (
+                    $item["extension"] === "php") {$this->container->register($item["filename"], $this->configuration['namespaceComponent'] . $item["filename"]);
                 }
             }
         }

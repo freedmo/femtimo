@@ -40,6 +40,16 @@ class BaseController
         $this->request = $request;
         /** @var Container container */
         $this->container = $container;
+
+        /*
+         * If a class authentication available,
+         * check if we're in. If not move to AuthenticationController->indexAction
+         * */
+        if(class_exists("authentication")){
+            if($this->container->get('authentication')->login() === false){
+                $this->redirect('authentication', 'index');
+            }
+        }
     }
 
     /**
