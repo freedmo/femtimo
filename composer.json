@@ -21,7 +21,8 @@
     "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
-            "femtimo\\engine\\":"engine/"
+            "femtimo\\engine\\":"engine/",
+            "femtimo\\engine\\component\\":"engine/component/"
         }
     }
 }

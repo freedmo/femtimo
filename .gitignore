@@ -1,3 +1,5 @@
 /cmd.exe.lnk
 /vendor/
 /composer.lock
+/index.php
+/.idea
