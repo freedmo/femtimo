@@ -24,10 +24,6 @@ class BaseController
     /** @var  RedirectResponse $redirect */
     protected $redirect;
 
-    protected $action;
-
-    protected $controller;
-
     /**
      * @var
      */
@@ -39,15 +35,12 @@ class BaseController
      * @param $container Container
      * @param $from array
      */
-    public function __construct($request, $container, $from)
+    public function __construct($request, $container)
     {
         /** @var Request request */
         $this->request = $request;
         /** @var Container container */
         $this->container = $container;
-
-        $this->action = $from['action'];
-        $this->controller = $from['controller'];
 
         /*
          * If a class authentication available,
@@ -61,81 +54,45 @@ class BaseController
     }
 
     /**
-     * @return \Symfony\Component\DependencyInjection\Container
-     */
-    protected function getContainer()
-    {
-        return $this->container;
-    }
-
-    /**
      * @param $controller
      * @param $action
      * @param int $status
      */
     protected function redirect($controller, $action, $status = 302)
     {
-        if (strcmp($this->controller, $controller) !== 0) {
+        $path = $this->resolveUri();
+        if ($path === false) {
+            $response = new RedirectResponse("$controller" . DIRECTORY_SEPARATOR . "$action");
+            $response->setStatusCode($status);
+            $this->redirect = $response;
+        } else {
+            if (strcmp($path['controller'], $controller) !== 0) {
                 $response = new RedirectResponse("$controller" . DIRECTORY_SEPARATOR . "$action");
                 $response->setStatusCode($status);
                 $this->redirect = $response;
-        }
-        else{
-            if(strcmp($this->action, $action) !== 0){
-                $response = new RedirectResponse("$controller" . DIRECTORY_SEPARATOR . "$action");
-                $response->setStatusCode($status);
-                $this->redirect = $response;
+            } else {
+                if (strcmp($path['action'], $action) !== 0) {
+                    $response = new RedirectResponse("$controller" . DIRECTORY_SEPARATOR . "$action");
+                    $response->setStatusCode($status);
+                    $this->redirect = $response;
+                }
             }
         }
     }
 
-    /**
-     * @param $controller
-     * @param $action
-     * @param null $params
-     * @return int|RedirectResponse|\Symfony\Component\HttpFoundation\Response
-     */
-    protected function forward($controller, $action, $params = null)
+    private function resolveUri()
     {
+        $param = explode('?', $this->request->getRequestUri());
+        $path = array_values(array_filter(explode(DIRECTORY_SEPARATOR, $param[0]), 'strlen'));
 
-        if (strcmp($this->controller, $controller) !== 0) {
-                if ($this->action != $action) {
-                    if (isset($params)) {
-                        $this->request->attributes->add($params);
-                    }
-
-                    $subRequest = $this->request->duplicate(
-                        array_merge($this->request->query->all(), $params),
-                        array_merge($this->request->request->all(), $params),
-                        null,
-                        null,
-                        null,
-                        array_merge($this->request->server->all(), [
-                            'REQUEST_URI' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
-                            'REDIRECT_URL' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
-                        ]));
-                    return ((new Kernel())->handle($subRequest, HttpKernel::SUB_REQUEST));
-                }
+        if (empty($path)) {
+            return false;
         }
-        else{
-            if(strcmp($this->action, $action) !== 0){
-                if ($this->action != $action) {
-                    if (isset($params)) {
-                        $this->request->attributes->add($params);
-                    }
-
-                    $subRequest = $this->request->duplicate(
-                        array_merge($this->request->query->all(), $params),
-                        array_merge($this->request->request->all(), $params),
-                        null,
-                        null,
-                        null,
-                        array_merge($this->request->server->all(), [
-                            'REQUEST_URI' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
-                            'REDIRECT_URL' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
-                        ]));
-                    return ((new Kernel())->handle($subRequest, HttpKernel::SUB_REQUEST));
-                }
+        if (isset($path[0])) {
+            if (isset($path[1])) {
+                return ['controller' => $path[0], 'action' => $path[1]];
+            } else {
+                return ['controller' => $path[0]];
             }
         }
     }
@@ -162,6 +119,14 @@ class BaseController
         $this->json = json_encode($json);
     }
 
+    /**
+     * @return mixed
+     */
+    public function getJson()
+    {
+        return $this->json;
+    }
+
     /** @param $json array */
     public function setJson($json)
     {
@@ -169,10 +134,52 @@ class BaseController
     }
 
     /**
-     * @return mixed
+     * @return \Symfony\Component\DependencyInjection\Container
      */
-    public function getJson()
+    protected function getContainer()
     {
-        return $this->json;
+        return $this->container;
+    }
+
+    /**
+     * @param $controller
+     * @param $action
+     * @param null $params
+     * @return int|RedirectResponse|\Symfony\Component\HttpFoundation\Response
+     */
+    protected function forward($controller, $action, $params = null)
+    {
+
+        $path = $this->resolveUri();
+        if ($path === false) {
+            return $this->forwardLogic($controller, $action, $params);
+        } else {
+            if (strcmp($path['controller'], $controller) !== 0) {
+                return $this->forwardLogic($controller, $action, $params);
+            } else {
+                if (strcmp($path['action'], $action) !== 0) {
+                    return $this->forwardLogic($controller, $action, $params);
+                }
+            }
+        }
+    }
+
+    private function forwardLogic($controller, $action, $params = null)
+    {
+        if (isset($params)) {
+            $this->request->attributes->add($params);
+        }
+
+        $subRequest = $this->request->duplicate(
+            array_merge($this->request->query->all(), $params),
+            array_merge($this->request->request->all(), $params),
+            null,
+            null,
+            null,
+            array_merge($this->request->server->all(), [
+                'REQUEST_URI' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
+                'REDIRECT_URL' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
+            ]));
+        return ((new Kernel())->handle($subRequest, HttpKernel::SUB_REQUEST));
     }
 }

@@ -2,7 +2,6 @@
 
 namespace femtimo\engine;
 
-use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -30,7 +29,7 @@ class Kernel implements HttpKernelInterface
         $this->configuration['namespaceComponent'] = $namespaceComponent;
         $this->configuration['controller'] = $defaultController;
         $this->configuration['action'] = $defaultAction;
-        if (empty($this->configuration['namespace']) || empty($this->configuration['theme'])){
+        if (empty($this->configuration['namespace']) || empty($this->configuration['theme'])) {
             throw new \Exception("Missing construct param.");
         }
     }
@@ -55,56 +54,56 @@ class Kernel implements HttpKernelInterface
                     $controllerShort = ucfirst($req[0]);
                 }
             }
-                if (class_exists($controllerName)) {
+            if (class_exists($controllerName)) {
 //                    (isset($req[1]) ? $actionName = $req[1] . 'Action' : $actionName = $this->configuration['action'] . 'Action');
 
-                    if(isset($req[1])){
-                        $actionShort = $req[1];
-                        $actionName = $req[1] . 'Action';
-                    }else{
-                        $actionShort = $this->configuration['action'];
-                        $actionName = $this->configuration['action'] . 'Action';
+                if (isset($req[1])) {
+                    $actionShort = $req[1];
+                    $actionName = $req[1] . 'Action';
+                } else {
+                    $actionShort = $this->configuration['action'];
+                    $actionName = $this->configuration['action'] . 'Action';
+                }
+
+
+                $controller = new $controllerName($request, $this->initializeContainer());
+
+                $methods = get_class_methods($controllerName);
+
+                if (in_array($actionName, $methods)) {
+                    $paramNames = array_map(function ($item) {
+                        return $item->getName();
+                    }, (new \ReflectionMethod($controller, $actionName))->getParameters());
+
+                    $paramCall = [];
+                    foreach ($paramNames as $paramName) {
+                        if ($request->query->get($paramName)) {
+                            $paramCall[] = $request->query->get($paramName);
+                        }
+                    }
+                    if (count(array_filter($paramCall)) == 0) {
+                        (call_user_func([$controller, $actionName]));
+                    } else {
+                        (call_user_func_array([$controller, $actionName], $paramCall));
                     }
 
-
-                    $controller = new $controllerName($request, $this->initializeContainer(), ['action' => $actionShort, 'controller' => $controllerShort]);
-
-                    $methods = get_class_methods($controllerName);
-
-                    if (in_array($actionName, $methods)) {
-                        $paramNames = array_map(function ($item) {
-                            return $item->getName();
-                        }, (new \ReflectionMethod($controller, $actionName))->getParameters());
-
-                        $paramCall = [];
-                        foreach ($paramNames as $paramName) {
-                            if ($request->query->get($paramName)) {
-                                $paramCall[] = $request->query->get($paramName);
-                            }
-                        }
-                        if (count(array_filter($paramCall)) == 0) {
-                            (call_user_func([$controller, $actionName]));
-                        } else {
-                            (call_user_func_array([$controller, $actionName], $paramCall));
-                        }
-
-                        /*
-                         * For a plugin which is still in development
-                         * */
-                        if ($redirect = $controller->isRedirect()) {
-                            return $redirect;
-                        } elseif ($redirect = $controller->isJson()) {
-                            return new JsonResponse($controller->getJson());
-                        } else {
-                            if (is_object($this->container->get('view')))
-                                return new Response($this->container->get('view')->display($this->configuration['theme'] . DIRECTORY_SEPARATOR . $controllerShort . DIRECTORY_SEPARATOR . $actionShort . ".tpl"));
-                        }
+                    /*
+                     * For a plugin which is still in development
+                     * */
+                    if ($redirect = $controller->isRedirect()) {
+                        return $redirect;
+                    } elseif ($redirect = $controller->isJson()) {
+                        return new JsonResponse($controller->getJson());
                     } else {
-                        return new RedirectResponse(DIRECTORY_SEPARATOR . $this->configuration['controller']);
+                        if (is_object($this->container->get('view')))
+                            return new Response($this->container->get('view')->display($this->configuration['theme'] . DIRECTORY_SEPARATOR . $controllerShort . DIRECTORY_SEPARATOR . $actionShort . ".tpl"));
                     }
                 } else {
-                    return \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST;
+                    return new RedirectResponse(DIRECTORY_SEPARATOR . $this->configuration['controller']);
                 }
+            } else {
+                return \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST;
+            }
         }
     }
 
@@ -125,7 +124,9 @@ class Kernel implements HttpKernelInterface
         foreach ($files as $file) {
             if ($item = pathinfo($this->configuration['component'] . DIRECTORY_SEPARATOR . "$file")) {
                 if (
-                    $item["extension"] === "php") {$this->container->register($item["filename"], $this->configuration['namespaceComponent'] . $item["filename"]);
+                    $item["extension"] === "php"
+                ) {
+                    $this->container->register($item["filename"], $this->configuration['namespaceComponent'] . $item["filename"]);
                 }
             }
         }
