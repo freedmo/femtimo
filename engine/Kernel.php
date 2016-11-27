@@ -45,9 +45,12 @@ class Kernel implements HttpKernelInterface
             if (count($request->getRequestUri()) != 0) {
                 $param = explode('?', $request->getRequestUri());
                 $req = array_values(array_filter(explode(DIRECTORY_SEPARATOR, $param[0]), 'strlen'));
-                $controllerName = $this->configuration['namespace'] . ucfirst($req[0]) . $this->configuration['controller'];
+                if (empty($req)) {
+                    $controllerName = $this->configuration['namespace'] . $this->configuration['controller'] . 'Controller';
+                } else {
+                    $controllerName = $this->configuration['namespace'] . ucfirst($req[0]) . 'Controller';
+                }
             }
-            if (strlen($param[0]) > 1) {
                 if (class_exists($controllerName)) {
                     (isset($req[1]) ? $actionName = $req[1] . 'Action' : $actionName = $this->configuration['action'] . 'Action');
 
@@ -85,9 +88,6 @@ class Kernel implements HttpKernelInterface
                 } else {
                     return \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST;
                 }
-            } else {
-                return \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST;
-            }
         }
     }
 
