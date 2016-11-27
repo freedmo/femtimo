@@ -85,7 +85,7 @@ class Kernel implements HttpKernelInterface
                         } elseif ($redirect = $controller->isJson()) {
                             return new JsonResponse($controller->getJson());
                         } else {
-                            if (class_exists('Smarty'))
+                            if (is_object($this->container->get('view')))
                                 return new Response($this->container->get('view')->display($this->configuration['theme'] . DIRECTORY_SEPARATOR . str_replace("Controller", "", str_replace("\\", "/", (new \ReflectionClass($controller))->getShortName())) . DIRECTORY_SEPARATOR . str_replace("Action", "", $actionName) . ".tpl"));
                         }
                     } else {
@@ -101,12 +101,9 @@ class Kernel implements HttpKernelInterface
     {
         $this->container = new ContainerBuilder();
 
-        /*
-         * Some path problem here
-         * */
-        $files = array_diff(scandir('engine' . DIRECTORY_SEPARATOR . 'component'), array('.', '..'));
+        $files = array_diff(scandir(realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'component'), array('.', '..'));
         foreach ($files as $file) {
-            if ($item = pathinfo("engine" . DIRECTORY_SEPARATOR . "component" . DIRECTORY_SEPARATOR . "$file")) {
+            if ($item = pathinfo(realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . "component" . DIRECTORY_SEPARATOR . "$file")) {
                 if ($item["extension"] === "php") {
                     $this->container->register($item["filename"], "femtimo\\engine\\component\\" . $item["filename"]);
                 }
