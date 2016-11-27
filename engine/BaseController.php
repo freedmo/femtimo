@@ -75,8 +75,15 @@ class BaseController
      */
     protected function redirect($controller, $action, $status = 302)
     {
-        if ($this->controller != $controller) {
+        if (strcmp($this->controller, $controller) !== 0) {
             if ($this->action != $action) {
+                $response = new RedirectResponse("$controller" . DIRECTORY_SEPARATOR . "$action");
+                $response->setStatusCode($status);
+                $this->redirect = $response;
+            }
+        }
+        else{
+            if(strcmp($this->action, $action) !== 0){
                 $response = new RedirectResponse("$controller" . DIRECTORY_SEPARATOR . "$action");
                 $response->setStatusCode($status);
                 $this->redirect = $response;
@@ -92,23 +99,47 @@ class BaseController
      */
     protected function forward($controller, $action, $params = null)
     {
-        if ($this->controller != $controller) {
-            if ($this->action != $action) {
-                if (isset($params)) {
-                    $this->request->attributes->add($params);
-                }
 
-                $subRequest = $this->request->duplicate(
-                    array_merge($this->request->query->all(), $params),
-                    array_merge($this->request->request->all(), $params),
-                    null,
-                    null,
-                    null,
-                    array_merge($this->request->server->all(), [
-                        'REQUEST_URI' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
-                        'REDIRECT_URL' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
-                    ]));
-                return ((new Kernel())->handle($subRequest, HttpKernel::SUB_REQUEST));
+        if (strcmp($this->controller, $controller) !== 0) {
+            if ($this->action != $action) {
+                if ($this->action != $action) {
+                    if (isset($params)) {
+                        $this->request->attributes->add($params);
+                    }
+
+                    $subRequest = $this->request->duplicate(
+                        array_merge($this->request->query->all(), $params),
+                        array_merge($this->request->request->all(), $params),
+                        null,
+                        null,
+                        null,
+                        array_merge($this->request->server->all(), [
+                            'REQUEST_URI' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
+                            'REDIRECT_URL' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
+                        ]));
+                    return ((new Kernel())->handle($subRequest, HttpKernel::SUB_REQUEST));
+                }
+            }
+        }
+        else{
+            if(strcmp($this->action, $action) !== 0){
+                if ($this->action != $action) {
+                    if (isset($params)) {
+                        $this->request->attributes->add($params);
+                    }
+
+                    $subRequest = $this->request->duplicate(
+                        array_merge($this->request->query->all(), $params),
+                        array_merge($this->request->request->all(), $params),
+                        null,
+                        null,
+                        null,
+                        array_merge($this->request->server->all(), [
+                            'REQUEST_URI' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
+                            'REDIRECT_URL' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
+                        ]));
+                    return ((new Kernel())->handle($subRequest, HttpKernel::SUB_REQUEST));
+                }
             }
         }
     }
