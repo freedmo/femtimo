@@ -48,15 +48,26 @@ class Kernel implements HttpKernelInterface
                 $param = explode('?', $request->getRequestUri());
                 $req = array_values(array_filter(explode(DIRECTORY_SEPARATOR, $param[0]), 'strlen'));
                 if (empty($req)) {
-                    $controllerName = $this->configuration['namespace'] . $this->configuration['controller'] . 'Controller';
+                    $controllerName = $this->configuration['namespace'] . ucfirst($this->configuration['controller']) . 'Controller';
+                    $controllerShort = ucfirst($this->configuration['controller']);
                 } else {
                     $controllerName = $this->configuration['namespace'] . ucfirst($req[0]) . 'Controller';
+                    $controllerShort = ucfirst($req[0]);
                 }
             }
                 if (class_exists($controllerName)) {
-                    (isset($req[1]) ? $actionName = $req[1] . 'Action' : $actionName = $this->configuration['action'] . 'Action');
+//                    (isset($req[1]) ? $actionName = $req[1] . 'Action' : $actionName = $this->configuration['action'] . 'Action');
 
-                    $controller = new $controllerName($request, $this->initializeContainer());
+                    if(isset($req[1])){
+                        $actionShort = $req[1];
+                        $actionName = $req[1] . 'Action';
+                    }else{
+                        $actionShort = $this->configuration['action'];
+                        $actionName = $this->configuration['action'] . 'Action';
+                    }
+
+
+                    $controller = new $controllerName($request, $this->initializeContainer(), ['action' => $actionShort, 'controller' => $controllerShort]);
 
                     $methods = get_class_methods($controllerName);
 
@@ -86,7 +97,7 @@ class Kernel implements HttpKernelInterface
                             return new JsonResponse($controller->getJson());
                         } else {
                             if (is_object($this->container->get('view')))
-                                return new Response($this->container->get('view')->display($this->configuration['theme'] . DIRECTORY_SEPARATOR . str_replace("Controller", "", str_replace("\\", "/", (new \ReflectionClass($controller))->getShortName())) . DIRECTORY_SEPARATOR . str_replace("Action", "", $actionName) . ".tpl"));
+                                return new Response($this->container->get('view')->display($this->configuration['theme'] . DIRECTORY_SEPARATOR . $controllerShort . DIRECTORY_SEPARATOR . $actionShort . ".tpl"));
                         }
                     } else {
                         return new RedirectResponse(DIRECTORY_SEPARATOR . $this->configuration['controller']);

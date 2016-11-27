@@ -24,6 +24,10 @@ class BaseController
     /** @var  RedirectResponse $redirect */
     protected $redirect;
 
+    protected $action;
+
+    protected $controller;
+
     /**
      * @var
      */
@@ -31,22 +35,26 @@ class BaseController
 
     /**
      * BaseController constructor.
-     * @param $request
-     * @param $container
+     * @param $request Request
+     * @param $container Container
+     * @param $from array
      */
-    public function __construct($request, $container)
+    public function __construct($request, $container, $from)
     {
         /** @var Request request */
         $this->request = $request;
         /** @var Container container */
         $this->container = $container;
 
+        $this->action = $from['action'];
+        $this->controller = $from['controller'];
+
         /*
          * If a class authentication available,
          * check if we're in. If not move to AuthenticationController->indexAction
          * */
-        if(is_object($this->container->get('authentication'))){
-            if($this->container->get('authentication')->login() === false){
+        if (is_object($this->container->get('authentication'))) {
+            if ($this->container->get('authentication')->login() === false) {
                 $this->redirect('authentication', 'index');
             }
         }
@@ -67,9 +75,13 @@ class BaseController
      */
     protected function redirect($controller, $action, $status = 302)
     {
-        $response = new RedirectResponse("$controller" . DIRECTORY_SEPARATOR . "$action");
-        $response->setStatusCode($status);
-        $this->redirect = $response;
+        if ($this->controller != $controller) {
+            if ($this->action != $action) {
+                $response = new RedirectResponse("$controller" . DIRECTORY_SEPARATOR . "$action");
+                $response->setStatusCode($status);
+                $this->redirect = $response;
+            }
+        }
     }
 
     /**
@@ -80,21 +92,25 @@ class BaseController
      */
     protected function forward($controller, $action, $params = null)
     {
-        if (isset($params)) {
-            $this->request->attributes->add($params);
-        }
+        if ($this->controller != $controller) {
+            if ($this->action != $action) {
+                if (isset($params)) {
+                    $this->request->attributes->add($params);
+                }
 
-        $subRequest = $this->request->duplicate(
-            array_merge($this->request->query->all(), $params),
-            array_merge($this->request->request->all(), $params),
-            null,
-            null,
-            null,
-            array_merge($this->request->server->all(), [
-                'REQUEST_URI' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
-                'REDIRECT_URL' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
-            ]));
-        return ((new Kernel())->handle($subRequest, HttpKernel::SUB_REQUEST));
+                $subRequest = $this->request->duplicate(
+                    array_merge($this->request->query->all(), $params),
+                    array_merge($this->request->request->all(), $params),
+                    null,
+                    null,
+                    null,
+                    array_merge($this->request->server->all(), [
+                        'REQUEST_URI' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
+                        'REDIRECT_URL' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
+                    ]));
+                return ((new Kernel())->handle($subRequest, HttpKernel::SUB_REQUEST));
+            }
+        }
     }
 
     /**
