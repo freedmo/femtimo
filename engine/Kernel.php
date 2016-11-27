@@ -80,7 +80,7 @@ class Kernel implements HttpKernelInterface
                         } elseif ($redirect = $controller->isJson()) {
                             return new JsonResponse($controller->getJson());
                         } else {
-                            return new Response($this->configuration['theme'] . ($req[0]) . "/" . (isset($req[1]) ? $req[1] : $this->configuration['action']) . ".php");
+                            return new Response($this->configuration['theme'] . str_replace("Controller", "", $controller) . DIRECTORY_SEPARATOR . str_replace("Action", "", $actionName) . ".php");
                         }
                     } else {
                         return new RedirectResponse(DIRECTORY_SEPARATOR . $this->configuration['controller']);
