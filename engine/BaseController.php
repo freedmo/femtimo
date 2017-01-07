@@ -98,19 +98,27 @@ class BaseController
     }
 
     /**
-     * @return RedirectResponse
+     * @return boolean
      */
     public function isRedirect()
     {
-        return $this->redirect;
+        return empty($this->redirect) ? false : true;
     }
 
     /**
-     * @return mixed
+     * @return boolean
      */
     public function isJson()
     {
-        return $this->json;
+        return empty($this->json) ? false : true;
+    }
+
+    /**
+     * @return RedirectResponse
+     */
+    public function getRedirect()
+    {
+        return $this->redirect;
     }
 
     /** @param $json array */
@@ -162,24 +170,5 @@ class BaseController
                 }
             }
         }
-    }
-
-    private function forwardLogic($controller, $action, $params = null)
-    {
-        if (isset($params)) {
-            $this->request->attributes->add($params);
-        }
-
-        $subRequest = $this->request->duplicate(
-            array_merge($this->request->query->all(), $params),
-            array_merge($this->request->request->all(), $params),
-            null,
-            null,
-            null,
-            array_merge($this->request->server->all(), [
-                'REQUEST_URI' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
-                'REDIRECT_URL' => DIRECTORY_SEPARATOR . "$controller" . DIRECTORY_SEPARATOR . "$action",
-            ]));
-        return ((new Kernel())->handle($subRequest, HttpKernel::SUB_REQUEST));
     }
 }

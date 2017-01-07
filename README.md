@@ -1,5 +1,6 @@
 # femtimo
-A web application core based on symfony. For building an MVC website, with plugins in the future.
+A web framework, build/based on symfony. 
+It allows developer to build, easy website based on MVC with magic routing.
 
 # About current state
-+ Rendering working only with simple php.
++ added smarty rendering
