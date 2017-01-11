@@ -14,6 +14,7 @@ use Symfony\Component\HttpKernel\HttpKernel;
 
 /**
  * Class BaseController
+ *
  * @package femtimo\engine
  */
 class BaseController
@@ -25,12 +26,18 @@ class BaseController
     protected $redirect;
 
     /**
+     * @var boolean
+     */
+    protected $dontDisplay;
+
+    /**
      * @var
      */
     protected $json;
 
     /**
      * BaseController constructor.
+     *
      * @param $request Request
      * @param $container Container
      * @param $from array
@@ -41,21 +48,13 @@ class BaseController
         $this->request = $request;
         /** @var Container container */
         $this->container = $container;
-
-        /*
-         * If a class authentication available,
-         * check if we're in. If not move to AuthenticationController->indexAction
-         * */
-        if (is_object($this->container->get('authentication'))) {
-            if ($this->container->get('authentication')->login() === false) {
-                $this->redirect('authentication', 'index');
-            }
-        }
+        /** @var boolean dontDisplay */
+        $this->dontDisplay = false;
     }
 
     /**
-     * @param $controller
-     * @param $action
+     * @param     $controller
+     * @param     $action
      * @param int $status
      */
     protected function redirect($controller, $action, $status = 302)
@@ -142,6 +141,31 @@ class BaseController
     }
 
     /**
+     * @return mixed
+     */
+    public function isDontDisplay()
+    {
+        return empty($this->dontDisplay) ? false : true;
+    }
+
+
+    /**
+     * @return mixed
+     */
+    public function getDontDisplay()
+    {
+        return $this->dontDisplay;
+    }
+
+    /**
+     * @param mixed $dontDisplay
+     */
+    public function setDontDisplay($dontDisplay)
+    {
+        $this->dontDisplay = $dontDisplay;
+    }
+
+    /**
      * @return \Symfony\Component\DependencyInjection\Container
      */
     protected function getContainer()
@@ -150,9 +174,10 @@ class BaseController
     }
 
     /**
-     * @param $controller
-     * @param $action
+     * @param      $controller
+     * @param      $action
      * @param null $params
+     *
      * @return int|RedirectResponse|\Symfony\Component\HttpFoundation\Response
      */
     protected function forward($controller, $action, $params = null)

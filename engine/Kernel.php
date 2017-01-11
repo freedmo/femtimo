@@ -1,4 +1,9 @@
 <?php
+/**
+ * User: Eduard Grünwald
+ * Date: 27.11.2016
+ * Time: 02:09
+ */
 
 namespace femtimo\engine;
 
@@ -176,6 +181,7 @@ class Kernel implements HttpKernelInterface
      */
     public function generateParam($request, $controller, $action)
     {
+        $paramCall = [];
         $paramNames = array_map(function ($item) {
             return $item->getName();
         }, (new \ReflectionMethod($controller, $action))->getParameters());
@@ -185,6 +191,7 @@ class Kernel implements HttpKernelInterface
                 $paramCall[] = $request->query->get($paramName);
             }
         }
+        return $paramCall;
     }
 }
 
