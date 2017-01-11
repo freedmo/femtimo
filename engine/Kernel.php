@@ -195,7 +195,7 @@ class Kernel implements HttpKernelInterface
         return $paramCall;
     }
 
-    private function getResponse($controller)
+    private function getResponse($controller, $controllerShort, $actionShort)
     {
         if ($controller->isRedirect()) {
             return $controller->getRedirect();
