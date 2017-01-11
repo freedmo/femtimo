@@ -38,7 +38,7 @@ class Kernel implements HttpKernelInterface
      * @param        $namespaceComponent
      * @param string $defaultController
      * @param string $defaultAction
-     * @param null   $componentFolder
+     * @param null $componentFolder
      *
      * @throws \Exception
      */
@@ -49,7 +49,8 @@ class Kernel implements HttpKernelInterface
         $defaultController = 'Index',
         $defaultAction = 'index',
         $componentFolder = null
-    ) {
+    )
+    {
         $this->configuration['theme'] = $themeFolder;
         $this->configuration['component'] = $componentFolder;
         $this->configuration['namespace'] = $namespace;
@@ -64,8 +65,8 @@ class Kernel implements HttpKernelInterface
 
     /**
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param int                                       $type
-     * @param bool                                      $catch
+     * @param int $type
+     * @param bool $catch
      *
      * @return int|RedirectResponse|Response
      */
@@ -73,7 +74,8 @@ class Kernel implements HttpKernelInterface
         \Symfony\Component\HttpFoundation\Request $request,
         $type = self::MASTER_REQUEST,
         $catch = true
-    ) {
+    )
+    {
         if (PHP_SAPI === 'cli') {
             return new \Symfony\Component\HttpFoundation\Response('<html><body>CLI-Mode currently not supported.</body></html>>');
         } else {
@@ -99,15 +101,7 @@ class Kernel implements HttpKernelInterface
                         (call_user_func_array([$controller, $actionName], $paramCall));
                     }
 
-                    if ($controller->isRedirect()) {
-                        return $controller->getRedirect();
-                    } elseif ($controller->isJson()) {
-                        return new JsonResponse($controller->getJson());
-                    } else {
-                        if (is_object($this->container->get('view'))) {
-                            return new Response($this->container->get('view')->display($this->configuration['theme'] . DIRECTORY_SEPARATOR . $controllerShort . DIRECTORY_SEPARATOR . $actionShort . ".tpl"));
-                        }
-                    }
+                    return $this->getResponse($controller, $controllerShort, $actionShort);
                 } else {
                     return new RedirectResponse(DIRECTORY_SEPARATOR . $this->configuration['controller']);
                 }
@@ -199,6 +193,21 @@ class Kernel implements HttpKernelInterface
             }
         }
         return $paramCall;
+    }
+
+    private function getResponse($controller)
+    {
+        if ($controller->isRedirect()) {
+            return $controller->getRedirect();
+        } elseif ($controller->isJson()) {
+            return new JsonResponse($controller->getJson());
+        } elseif ($controller->isDontDisplay()) {
+            return new Response();
+        } else {
+            if (is_object($this->container->get('view'))) {
+                return new Response($this->container->get('view')->display($this->configuration['theme'] . DIRECTORY_SEPARATOR . $controllerShort . DIRECTORY_SEPARATOR . $actionShort . ".tpl"));
+            }
+        }
     }
 }
 
