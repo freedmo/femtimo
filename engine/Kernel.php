@@ -15,6 +15,7 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
  * Class Kernel
+ *
  * @package femtimo\engine
  */
 class Kernel implements HttpKernelInterface
@@ -31,12 +32,14 @@ class Kernel implements HttpKernelInterface
 
     /**
      * Kernel constructor.
-     * @param $themeFolder
-     * @param $namespace
-     * @param $namespaceComponent
+     *
+     * @param        $themeFolder
+     * @param        $namespace
+     * @param        $namespaceComponent
      * @param string $defaultController
      * @param string $defaultAction
-     * @param null $componentFolder
+     * @param null   $componentFolder
+     *
      * @throws \Exception
      */
     public function __construct(
@@ -46,8 +49,7 @@ class Kernel implements HttpKernelInterface
         $defaultController = 'Index',
         $defaultAction = 'index',
         $componentFolder = null
-    )
-    {
+    ) {
         $this->configuration['theme'] = $themeFolder;
         $this->configuration['component'] = $componentFolder;
         $this->configuration['namespace'] = $namespace;
@@ -62,15 +64,16 @@ class Kernel implements HttpKernelInterface
 
     /**
      * @param \Symfony\Component\HttpFoundation\Request $request
-     * @param int $type
-     * @param bool $catch
+     * @param int                                       $type
+     * @param bool                                      $catch
+     *
      * @return int|RedirectResponse|Response
      */
     public function handle(
         \Symfony\Component\HttpFoundation\Request $request,
         $type = self::MASTER_REQUEST,
-        $catch = true)
-    {
+        $catch = true
+    ) {
         if (PHP_SAPI === 'cli') {
             return new \Symfony\Component\HttpFoundation\Response('<html><body>CLI-Mode currently not supported.</body></html>>');
         } else {
@@ -101,8 +104,9 @@ class Kernel implements HttpKernelInterface
                     } elseif ($controller->isJson()) {
                         return new JsonResponse($controller->getJson());
                     } else {
-                        if (is_object($this->container->get('view')))
+                        if (is_object($this->container->get('view'))) {
                             return new Response($this->container->get('view')->display($this->configuration['theme'] . DIRECTORY_SEPARATOR . $controllerShort . DIRECTORY_SEPARATOR . $actionShort . ".tpl"));
+                        }
                     }
                 } else {
                     return new RedirectResponse(DIRECTORY_SEPARATOR . $this->configuration['controller']);
@@ -115,6 +119,7 @@ class Kernel implements HttpKernelInterface
 
     /**
      * @param $req
+     *
      * @return array
      */
     private function generateController($req)
@@ -131,6 +136,7 @@ class Kernel implements HttpKernelInterface
 
     /**
      * @param $req
+     *
      * @return array
      */
     private function generateAction($req)
@@ -167,7 +173,8 @@ class Kernel implements HttpKernelInterface
                 if (
                     $item["extension"] === "php"
                 ) {
-                    $this->container->register($item["filename"], $this->configuration['namespaceComponent'] . $item["filename"]);
+                    $this->container->register($item["filename"],
+                        $this->configuration['namespaceComponent'] . $item["filename"]);
                 }
             }
         }
