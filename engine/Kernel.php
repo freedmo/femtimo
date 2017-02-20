@@ -204,9 +204,8 @@ class Kernel implements HttpKernelInterface
         } elseif ($controller->isDontDisplay()) {
             return new Response();
         } else {
-            if (is_object($this->container->get('view'))) {
-                return new Response($this->container->get('view')->display($this->configuration['theme'] . DIRECTORY_SEPARATOR . $controllerShort . DIRECTORY_SEPARATOR . $actionShort . ".tpl"));
-            }
+            $aName = $actionShort.'Action';
+            return new Response($controller->$aName());
         }
     }
 }
