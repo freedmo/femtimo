@@ -16,7 +16,7 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 /**
  * Class Kernel
  *
- * @package femtimo\engine
+ * @package Femtimo\Femtimo
  */
 class Kernel implements HttpKernelInterface
 {
@@ -52,7 +52,7 @@ class Kernel implements HttpKernelInterface
     )
     {
         $this->configuration['theme'] = $themeFolder;
-        $this->configuration['component'] = $componentFolder;
+        $this->configuration['Component'] = $componentFolder;
         $this->configuration['namespace'] = $namespace;
         $this->configuration['namespaceComponent'] = $namespaceComponent;
         $this->configuration['controller'] = $defaultController;
@@ -87,7 +87,7 @@ class Kernel implements HttpKernelInterface
             if (class_exists($controllerName)) {
                 list($actionShort, $actionName) = $this->generateAction($req);
 
-                /** @var BaseController $controller */
+                /** @var Controller $controller */
                 $controller = new $controllerName($request, $this->initializeContainer());
 
                 $methods = get_class_methods($controllerName);
@@ -152,18 +152,18 @@ class Kernel implements HttpKernelInterface
     {
         $this->container = new ContainerBuilder();
 
-        $files = array_diff(scandir(realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'component'), array('.', '..'));
+        $files = array_diff(scandir(realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'Component'), array('.', '..'));
         foreach ($files as $file) {
-            if ($item = pathinfo(realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . "component" . DIRECTORY_SEPARATOR . "$file")) {
+            if ($item = pathinfo(realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . "Component" . DIRECTORY_SEPARATOR . "$file")) {
                 if ($item["extension"] === "php") {
-                    $this->container->register($item["filename"], "femtimo\\engine\\component\\" . $item["filename"]);
+                    $this->container->register($item["filename"], "Femtimo\\Femtimo\\Component\\" . $item["filename"]);
                 }
             }
         }
 
-        $files = array_diff(scandir($this->configuration['component']), array('.', '..'));
+        $files = array_diff(scandir($this->configuration['Component']), array('.', '..'));
         foreach ($files as $file) {
-            if ($item = pathinfo($this->configuration['component'] . DIRECTORY_SEPARATOR . "$file")) {
+            if ($item = pathinfo($this->configuration['Component'] . DIRECTORY_SEPARATOR . "$file")) {
                 if (
                     $item["extension"] === "php"
                 ) {
@@ -179,6 +179,8 @@ class Kernel implements HttpKernelInterface
      * @param $request
      * @param $controller
      * @param $action
+     *
+     * @return array
      */
     public function generateParam($request, $controller, $action)
     {
@@ -195,7 +197,7 @@ class Kernel implements HttpKernelInterface
         return $paramCall;
     }
 
-    private function getResponse($controller, $controllerShort, $actionShort)
+    private function getResponse(Controller $controller, $controllerShort, $actionShort)
     {
         if ($controller->isRedirect()) {
             return $controller->getRedirect();

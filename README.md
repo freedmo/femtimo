@@ -26,7 +26,7 @@ $application = new Kernel(
 "Project\\Components\\" /* Folder for autoloaded class by DI-Container */,
 "Blog" /* Basic controller, which is used as default */,
 "show" /* Basic action of basic controller, which is used as default */,
-"component/" /* Default path for component folder */
+"Component" Component
 );
 
 $request = \Symfony\Component\HttpFoundation\Request::createFromGlobals();

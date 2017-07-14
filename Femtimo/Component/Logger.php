@@ -1,6 +1,6 @@
 <?php
 /**
- * Project: femtimo.
+ * Project: Femtimo.
  * User: Eduard Grünwald <freedmo@freedmo.de>
  * Date: 27.11.2016
  * Time: 02:29

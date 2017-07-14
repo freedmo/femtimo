@@ -15,9 +15,9 @@ use Symfony\Component\HttpKernel\HttpKernel;
 /**
  * Class BaseController
  *
- * @package femtimo\engine
+ * @package Femtimo\Femtimo
  */
-class BaseController
+class Controller
 {
     /** @var  \Symfony\Component\DependencyInjection\Container */
     protected $container;
@@ -185,13 +185,13 @@ class BaseController
 
         $path = $this->resolveUri();
         if ($path === false) {
-            return $this->forwardLogic($controller, $action, $params);
+            return $this->forward($controller, $action, $params);
         } else {
             if (strcmp($path['controller'], $controller) !== 0) {
-                return $this->forwardLogic($controller, $action, $params);
+                return $this->forward($controller, $action, $params);
             } else {
                 if (strcmp($path['action'], $action) !== 0) {
-                    return $this->forwardLogic($controller, $action, $params);
+                    return $this->forward($controller, $action, $params);
                 }
             }
         }
